@@ -60,14 +60,17 @@ void play (cell_t ** board, cell_t ** newboard, int size, structures::ArrayList<
   }
   for (i=1; i<size; i++)
     for (j=1; j<size; j++) {
-      newboard[i-1][j-1] = (newboard[i][j]||0x00800000) && ((newboard[i][j]<<8) && 0x00800000);
-      newboard[i-1][j] = (newboard[i][j]||0x00700000) && ((newboard[i][j]<<7) && 0x00700000);
-      newboard[i-1][j+1] = (newboard[i][j]||0x00100000) && ((newboard[i][j]<<5) && 0x00100000);
-      newboard[i][j-1] = (newboard[i][j]||0x00800000) && ((newboard[i][j]<<14) && 0x00800000);
-      newboard[i][j+1] = (newboard[i][j]||0x00800000) && ((newboard[i][j]<<17) && 0x00800000);
-      newboard[i+1][j-1] = (newboard[i][j]||0x00800000) && ((newboard[i][j]<<18) && 0x00800000);
-      newboard[i+1][j] = (newboard[i][j]||0x00800000) && ((newboard[i][j]<<21) && 0x00800000);
-      newboard[i+1][j+1] = (newboard[i][j]||0x00800000) && ((newboard[i][j]<<22) && 0x00800000);
+      if (newboard[i][j] != board[i][j]){
+        newboard[i][j] = (newboard[i][j]&0xffff0000) |
+              (((newboard[i-1][j-1]>>16) & 0x00000001)
+              | ((newboard[i-1][j]>>15) & 0x0000000e)
+              | ((newboard[i-1][j+1]>>14) & 0x00000010)
+              | ((newboard[i][j-1]>>13) & 0x000000e0)
+              | ((newboard[i][j+1]>>8) & 0x00000100)
+              | ((newboard[i+1][j+1]>>8) & 0x00000e00)
+              | ((newboard[i+1][j+1]>>8) & 0x00001000)
+              | ((newboard[i+1][j+1]>>8) & 0x0000e000))
+      }
     }
   }
 }
