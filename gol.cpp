@@ -55,21 +55,70 @@ void play (cell_t ** board, cell_t ** newboard, int size, structures::ArrayList<
   new_live_cells->clear();
   for (i=1; i<size; i++)
     for (j=1; j<size; j++) {
-      newboard[i][j] = lookup(board[i][j]);
+      newboard[i][j] = next_state[board[i][j]];
     }
   }
   for (i=1; i<size; i++)
     for (j=1; j<size; j++) {
-      if (newboard[i][j] != board[i][j]){
-        newboard[i][j] = (newboard[i][j]&0xffff0000) |
-              (((newboard[i-1][j-1]>>16) & 0x00000001)
-              | ((newboard[i-1][j]>>15) & 0x0000000e)
-              | ((newboard[i-1][j+1]>>14) & 0x00000010)
-              | ((newboard[i][j-1]>>13) & 0x000000e0)
-              | ((newboard[i][j+1]>>8) & 0x00000100)
-              | ((newboard[i+1][j+1]>>8) & 0x00000e00)
-              | ((newboard[i+1][j+1]>>8) & 0x00001000)
-              | ((newboard[i+1][j+1]>>8) & 0x0000e000))
+      int nb = newboard[i][j];
+      int b = board[i][j];
+      if (nb & 0x1  != b & 0x1){//uppermost leftmost bit
+        if (nb & 0x1){
+          newboard[i-1][j-1] += 0x20000000;
+          newboard[i-1][j] += 0x02000000;
+          newboard[i][j-1] + 0x10;
+        }
+      }
+      if (nb & (0x1 <<3) != b & (0x1 <<3)){//uppermost leftmiddle bit
+        newboard[i-1][j] = newboard[i-1][j] ^ (0x1 <<3);
+      }
+      if (nb & (0x1 <<5) != b & (0x1 <<5)){//uppermost leftmiddle bit
+        newboard[i-1][j] ^= (0x1 <<5);
+      }
+      if (nb & (0x1 <<7) != b & (0x1 <<7)){//uppermost leftmiddle bit
+        if (nb & 0x1){
+            newboard[i-1][j-1] += 0x20000000;
+            newboard[i-1][j] += 0x02000000;
+            newboard[i][j-1] + 0x10;
+        }
+      }
+      if (nb & (0x1 <<10) != b & (0x1 <<10)){//uppermost leftmiddle bit
+        newboard[i-1][j] ^= (0x1 <<10);
+      }
+      if (nb & (0x1 <<12) != b & (0x1 <<12)){//uppermost leftmiddle bit
+        newboard[i-1][j] ^= (0x1 <<12);
+      }
+      if (nb & (0x1 <<14) != b & (0x1 <<14)){//uppermost leftmiddle bit
+        newboard[i-1][j] ^= (0x1 <<14);
+      }
+      if (nb & (0x1 <<16) != b & (0x1 <<16)){//uppermost leftmiddle bit
+        newboard[i-1][j] ^= (0x1 <<16);
+      }
+      if (nb & (0x1 <<18) != b & (0x1 <<18)){//uppermost leftmiddle bit
+        newboard[i-1][j] ^= (0x1 <<18);
+      }
+      if (nb & (0x1 <<20) != b & (0x1 <<20)){//uppermost leftmiddle bit
+        newboard[i-1][j] ^= (0x1 <<20);
+      }
+      if (nb & (0x1 <<22) != b & (0x1 <<22)){//uppermost leftmiddle bit
+        if (nb & 0x1){
+            newboard[i-1][j-1] += 0x20000000;
+            newboard[i-1][j] += 0x02000000;
+            newboard[i][j-1] + 0x10;
+        }
+      }
+      if (nb & (0x1 <<25) != b & (0x1 <<25)){//uppermost leftmiddle bit
+        newboard[i-1][j] ^= (0x1 <<25);
+      }
+      if (nb & (0x1 <<27) != b & (0x1 <<27)){//uppermost leftmiddle bit
+        newboard[i-1][j] ^= (0x1 <<27);
+      }
+      if (nb & (0x1 <<29) != b & (0x1 <<29)){//uppermost leftmiddle bit
+        if (nb & 0x1){
+            newboard[i-1][j-1] += 0x20000000;
+            newboard[i-1][j] += 0x02000000;
+            newboard[i][j-1] + 0x10;
+        }
       }
     }
   }
