@@ -12,8 +12,12 @@
 * means on, space means off.
 *
 */
+#include <pthread.h>
+#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <sys/sysinfo.h>
 
 typedef unsigned char cell_t;
 
@@ -32,31 +36,61 @@ void free_board (cell_t ** board, int size) {
   free(board);
 }
 
-
 /* return the number of on cells adjacent to the i,j cell */
-int adjacent_to (cell_t ** board, int size, int i, int j) {
+inline int adjacent_to (cell_t ** board, int size, int i, int j) {
   int count = 0;
   count+=board[i-1][j-1];
   count+=board[i-1][j];
-  count+=board[i-1][j+1]; 
+  count+=board[i-1][j+1];
   count+=board[i][j-1];
   count+=board[i][j+1];
-  count+=board[i+1][j-1]; 
+  count+=board[i+1][j-1];
   count+=board[i+1][j];
   count+=board[i+1][j+1];
   return count;
 }
 
-void play (cell_t ** board, cell_t ** newboard, int size) {
-  int	i, j, a;
+cell_t ** board;
+cell_t ** newboard;
+sem_t *producer_sem1;
+sem_t *producer_sem2;
+sem_t *consumer_sem;
+
+void *play(void *args) {
+  int i, j, a;
+  int thread_number = *((int *) args);
+  int size = ((int*)args)[1];
+  int steps = ((int*)args)[2];
+  int nthreads = ((int*)args)[3];
+  cell_t** b = board;
+  cell_t** nb = newboard;
+  sem_t *temp = producer_sem1;
   /* for each cell, apply the rules of Life */
-  for (i=1; i<size+1; i++)
-    for (j=1; j<size+1; j++) {
-    a = adjacent_to (board, size, i, j);
-    if (a == 2) newboard[i][j] = board[i][j];
-    else if (a == 3) newboard[i][j] = 1;
-    else if (a < 2) newboard[i][j] = 0;
-    else newboard[i][j] = 0;
+  int maxi = (int)(size/(double)nthreads*(thread_number+1));
+  int mini = (int)(size/(double)nthreads*thread_number);
+  //printf("start: %d finish: %d size: %d\n", mini, maxi, size);
+  for (int k=0; k<steps; k++) {
+    sem_wait(temp);
+    b = board;
+    nb = newboard;
+    for (i = mini+1; i<maxi+1; ++i) {
+      for (j= 1; j<size+1; j++) {
+        a = adjacent_to(b, size, i, j);
+        if (a == 2) {
+          nb[i][j] = b[i][j];
+        } else if (a == 3) {
+          nb[i][j] = 1 ;
+        } else {
+          nb[i][j] = 0;
+        }
+      }
+    }
+    if (temp == producer_sem2){
+      temp = producer_sem1;
+    } else {
+      temp = producer_sem2;
+    }
+    sem_post(consumer_sem);
   }
 }
 
@@ -67,11 +101,11 @@ void print (cell_t ** board, int size) {
   for (j=1; j<size+1; j++) {
     /* print each column position... */
     for (i=1; i<size+1; i++)
-	if (board[i][j]){
-	    printf ("■ ");        
-        }else{
-	    printf ("□ ");        
-        }
+      if(board[i][j]){
+          printf ("■ ");
+      } else {
+        printf ("  ");
+      }
     /* followed by a carriage return */
     printf ("\n");
   }
@@ -96,38 +130,87 @@ void read_file (FILE * f, cell_t ** board, int size) {
   }
 }
 
-int main () {
-  int size, steps;
-  FILE    *f;
-  f = stdin;
-  fscanf(f,"%d %d", &size, &steps);
-  cell_t ** prev = allocate_board (size+2);
-  read_file (f, prev,size);
-  fclose(f);
-  cell_t ** next = allocate_board (size+2);
+void fill_board(cell_t ** board, int size, int percentage_alive) {
+  int	i, j;
+  srand(time(NULL));
+  for (j=1; j<size+1; j++) {
+    for (i=1; i<size+1; i++){
+	    board[i][j] = ((int)(rand()) %percentage_alive == 0? 1 : 0 );
+    }
+  }
+}
+
+int main(int argc, char**argv){
+int size, steps;
+  //if (argc<2 || atoi(argv[1])){
+    FILE    *f;
+    f = stdin;
+    fscanf(f,"%d %d", &size, &steps);
+    board = allocate_board (size+2);
+    read_file (f, board,size);
+    fclose(f);
+    newboard = allocate_board (size+2);
+  /*} else {
+    steps = 1000;
+    size = 1000;
+    board = allocate_board (size+2);
+    newboard = allocate_board (size+2);
+    fill_board(board, size, 32);
+  }
+  /**/
+  sem_t p_sem1;
+  sem_t p_sem2;
+  sem_t* prod_sem = &p_sem2;
+  sem_t c_sem;
   cell_t ** tmp;
   int i;
   #ifdef DEBUG
-  printf("Initial:\n");
-  print(prev,size);
+    printf("Initial:\n");
+    print(board,size);
   #endif
-
+   printf ("You have %d processors.\n", get_nprocs());
+  int nthreads = atoi (argv[1]);
+  pthread_t* threads= malloc(nthreads*sizeof(pthread_t));
+  sem_init(&p_sem1, 0, nthreads);
+  sem_init(&p_sem2, 0, 0);
+  sem_init(&c_sem, 0, 0);
+  producer_sem1 = &p_sem1;
+  producer_sem2 = &p_sem2;
+  consumer_sem = &c_sem;
+  for (int j = 0; j<nthreads; j++){
+    int *i = malloc(sizeof(*i)*4);
+    i[0] = j;
+    i[1] = size;
+    i[2] = steps;
+    i[3] = nthreads;
+    pthread_create(&threads[j], NULL, play, (void *)i);
+  }
   for (i=0; i<steps; i++) {
-    play (prev,next,size);
+    for (int j = 0; j<nthreads; j++){
+      sem_wait(consumer_sem);
+    }
     #ifdef DEBUG
-    printf("%d ----------\n", i + 1);    
-    print (next,size);
+      printf("%d ----------\n", i + 1);
+      print (newboard,size);
     #endif
-    tmp = next;
-    next = prev;
-    prev = tmp;
+    tmp = newboard;
+    newboard = board;
+    board = tmp;
+    for (int j = 0; j<nthreads; j++){
+      sem_post(prod_sem);
+    }
+    if (prod_sem == producer_sem2){
+      prod_sem = producer_sem1;
+    } else {
+      prod_sem = producer_sem2;
+    }
   }
 
-#ifdef RESULT
-  printf("Final:\n");
-  print (prev,size);
-#endif
+  #ifdef RESULT
+    printf("Final:\n");
+    print (board,size);
+  #endif
 
-  free_board(prev,size);
-  free_board(next,size);
+  free_board(newboard,size);
+  free_board(board,size);
 }
