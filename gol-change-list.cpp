@@ -62,7 +62,7 @@ int adjacent_to (cell_t ** board, int i, int j) {
 inline void push(structures::ArrayList<std::pair<int,int>>* new_live_cells, int i, int j, cell_t** newboard){
   if (newboard[i][j]>>4){
     new_live_cells->push_back(pair<int,int>{i,j});
-    newboard[i][j] &= 0xf;
+    newboard[i][j] &= 0x1;
   }
 }
 
@@ -92,11 +92,8 @@ void play (cell_t ** board, cell_t ** newboard, int size, structures::ArrayList<
       auto p = old_live_cells->at(pos);
       int i = p.first;
       int j = p.second;
-      int nb = newboard[i][j] & 0x1;
-      //std::cout << " i="<<i<<" j="<<j<< " newboard is "<<(int) nb << "\n";
-      if ((newboard[i][j]>>4) && ((board[i][j]& 0x1) != nb)){
-        new_live_cells->push_back(pair<int,int>{i,j});
-        newboard[i][j] &= 0x0f;
+      if ((board[i][j]& 0x1)){
+        push(new_live_cells, i, j, newboard);
         push(new_live_cells, i-1, j-1, newboard);
         push(new_live_cells, i-1, j, newboard);
         push(new_live_cells, i-1, j+1, newboard);
@@ -116,7 +113,7 @@ void print (cell_t ** board, int size) {
   for (j=0; j<size; j++) {
     /* print each column position... */
     for (i=0; i<size; i++)
-	      if (board[i][j] &0xf){
+	      if (board[i][j] & 0x1){
 	          printf ("■ ");
         }else{
 	          printf ("□ ");
@@ -229,9 +226,4 @@ int main(int argc, char**argv){
         print(prev, size);
     }
   }
-  //free_board(prev,size);
-  //free_board(next,size);
-        // splat down some random pixels
-
-
 }
