@@ -92,7 +92,7 @@ void play (cell_t ** board, cell_t ** newboard, int size, structures::ArrayList<
       auto p = old_live_cells->at(pos);
       int i = p.first;
       int j = p.second;
-      if ((board[i][j]& 0x1)){
+      if ((board[i][j]& 0x1)) {
         push(new_live_cells, i, j, newboard);
         push(new_live_cells, i-1, j-1, newboard);
         push(new_live_cells, i-1, j, newboard);
@@ -175,8 +175,13 @@ void read_file (FILE * f, cell_t ** board, cell_t ** board2, int size) {
   }
 }
 
-int main(int argc, char**argv){
 
+// pra compilar usei o comando g++ gol-change-list.cpp -Ofast -std=gnu++14 -o output -mtune=native -funroll-loops
+// e para rodar time cat input-big.in | ./output 11 7 8 0 1
+// ele ignora os parametros 11 7 e 8, que são o size, steps, e um numero para escolher a proporcao de celulas vivas
+// o 0 diz para não imprimir o quadro, e o 1 diz para ler o arquivo ao invés de gerar um quadro aleatório
+// para rodar o input-little use time cat input-little.in | ./output 11 7 8 1 1
+int main(int argc, char**argv){
   int size = std::atoi(argv[1]);
   int steps = std::atoi(argv[2]);
   int dead = std::atoi(argv[3]);
