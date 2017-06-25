@@ -71,13 +71,12 @@ inline void copy_borders(cell_t** board, int size){
 
 void play (cell_t ** board, cell_t ** newboard, int size, structures::ArrayList<std::pair<int,int>>* old_live_cells
   , structures::ArrayList<std::pair<int,int>>* new_live_cells, vector<unsigned char>* pixels) {
-  int	pos, i, j, a;
+  int	pos, i, j, a, changed = 0;
   /* for each cell, apply the rules of Life */
   new_live_cells->clear();
-  #pragma omp parallel for private(j)
   for (i=1; i<size+1; i++){
     for (j=1; j<size+1; j++) {
-      newboard[i][j] = next_state[board[i][j]];
+      newboard[i][j] = next_state[board[i][j]];/*
       if (board[i][j] != newboard[i][j]){
          if (newboard[i][j] >> 4){
            const unsigned int offset = ( (size+2) * 4 * j ) + i * 4;
@@ -92,17 +91,16 @@ void play (cell_t ** board, cell_t ** newboard, int size, structures::ArrayList<
            pixels->at( offset + 2 ) =  0;        // r
            pixels->at( offset + 3 ) = SDL_ALPHA_OPAQUE;
          }
-      }
+      }*/
     }
   }
-  #pragma omp barrier
-  #pragma omp parallel for private(j)
   for (i=1; i<size+1; i++){
     for (j=1; j<size+1; j++) {
       int nb = newboard[i][j]>>4;
       //std::cout << " i="<<i<<" j="<<j<< " newboard is "<<(int) nb << "\n";
       //assert(newboard[i][j] < 32);
         if (board[i][j]>>4 != nb){
+          changed++;
             if(nb){
               newboard[i-1][j-1] += 1;
               newboard[i-1][j] += 1;
@@ -127,25 +125,8 @@ void play (cell_t ** board, cell_t ** newboard, int size, structures::ArrayList<
         }
       }
     }
+    //printf("changed: %d total:%d percent:%f\n",changed, size*size, ((double)changed)/size*size );
   copy_borders(newboard, size);
-}
-
-
-/* print the life board */
-void print (cell_t ** board, int size) {
-  int	i, j;
-  /* for each row */
-  for (j=1; j<size+1; j++) {
-    /* print each column position... */
-    for (i=1; i<size+1; i++)
-	if (board[i][j]){
-	    printf ("■ ");
-        }else{
-	    printf ("□ ");
-        }
-    /* followed by a carriage return */
-    printf ("\n");
-  }
 }
 
 void fill_board(cell_t ** board, int size, int percentage_alive) {
@@ -195,6 +176,59 @@ void init_states_table(){
      }
   }
 }
+/*
+void init_states_table2(){
+  for (int i1 = 0; i1<2; ++i1){
+    for (int j1 = 0; j1<4; ++j1){
+      for (int i2 = 0; i2<2; ++i2){
+        for (int j2 = 0; j2<4; ++j2){
+          for (int i3 = 0; i3<2; ++i3){
+            for (int j3 = 0; j3<4; ++j3){
+              for (int i4 = 0; i4<2; ++i4){
+                for (int j4 = 0; j4<4; ++j4){
+                  auto index = i1<<11 | j1<9 | i2 <<8 | j2 << 6 | i3 << 5 | j3 <<3 | i4 << 2 | j4
+                  auto next_i1;
+                  if (j1 + i2 + i3 + i4 == 2 ) {
+                    next_i1 = i1;
+                  } else if (j1 + i2 + i3 + i4 == 3){
+                    next_i1 = 1;
+                  } else {
+                    next_i1 = 0;
+                  }
+                  auto next_i2;
+                  if (j1 + i2 + i3 + i4 == 2 ) {
+                    next_i2 = i1;
+                  } else if (j1 + i2 + i3 + i4 == 3){
+                    next_i2 = 1;
+                  } else {
+                    next_i2 = 0;
+                  }
+                  auto next_i3;
+                  if (j1 + i2 + i3 + i4 == 2 ) {
+                    next_i3 = i1;
+                  } else if (j1 + i2 + i3 + i4 == 3){
+                    next_i3 = 0;
+                  } else {
+                    next_i3 = 0;
+                  }
+                  auto next_i1;
+                  if (j1 + i2 + i3 + i4 == 2 ) {
+                    next_i1 = i1;
+                  } else if (j1 + i2 + i3 + i4 == 3){
+                    next_i1 = 0;
+                  } else {
+                    next_i1 = 0;
+                  }
+                  quadruple_next_state[index] =
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}*/
 
 int main(int argc, char**argv){
 
@@ -220,7 +254,7 @@ int main(int argc, char**argv){
   const unsigned int texWidth = size+2;
   const unsigned int texHeight = size+2;
 
-
+/*
   SDL_Init( SDL_INIT_EVERYTHING );
   atexit( SDL_Quit );
 
@@ -246,7 +280,7 @@ int main(int argc, char**argv){
 
 
 
-  SDL_Event event;
+  SDL_Event event;*/
 
   init_states_table();
   bool running = true;
@@ -254,7 +288,7 @@ int main(int argc, char**argv){
   vector< unsigned char > pixels( texWidth * texHeight * 4, 0 );
 
   for (i=0; i<steps&&running; i++) {
-      const Uint64 start = SDL_GetPerformanceCounter();
+      /*const Uint64 start = SDL_GetPerformanceCounter();
 
       SDL_SetRenderDrawColor( renderer, 0, 0, 0, SDL_ALPHA_OPAQUE );
       SDL_RenderClear( renderer );
@@ -266,7 +300,7 @@ int main(int argc, char**argv){
               break;
           }
       }
-      SDL_Delay(100);
+      SDL_Delay(100);*/
 
         play (prev,next,size,  old_live_cells, new_live_cells, &pixels);
         tmp = next;
@@ -276,22 +310,22 @@ int main(int argc, char**argv){
         old_live_cells = new_live_cells;
         new_live_cells = temp;
 
-      SDL_UpdateTexture(texture, NULL,&pixels[0],texWidth * 4);
+    /*  SDL_UpdateTexture(texture, NULL,&pixels[0],texWidth * 4);
       SDL_RenderCopy( renderer, texture, NULL, NULL );
       SDL_RenderPresent( renderer );
 
       const Uint64 end = SDL_GetPerformanceCounter();
       const static Uint64 freq = SDL_GetPerformanceFrequency();
       const double seconds = ( end - start ) / static_cast< double >( freq );
-      //cout << "Frame time: " << seconds * 1000.0 << "ms" << endl;
+      //cout << "Frame time: " << seconds * 1000.0 << "ms" << endl;*/
   }
 
   free_board(prev,size);
   free_board(next,size);
 
-  SDL_DestroyRenderer( renderer );
-  SDL_DestroyWindow( window );
-  SDL_Quit();
+  //SDL_DestroyRenderer( renderer );
+  //SDL_DestroyWindow( window );
+  //SDL_Quit();
         // splat down some random pixels
 
 

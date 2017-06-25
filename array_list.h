@@ -53,19 +53,19 @@ class ArrayList {
     size_ = 0;
     contents = new T[max_size_];
   }
-  
+
   ~ArrayList() { delete[] contents; }
 
   /** removes all elements from the list.
    */
-  void clear() { size_ = 0; }
+  inline void clear() { size_ = 0; }
 
   /** inserts a element at the last position of the list
      */
   void push_back(const T& data) {
-    if (full()) {
-      throw std::out_of_range("list is full");
-    }
+    //if (full()) {
+    //  throw std::out_of_range("list is full");
+    //}
     contents[size_] = data;
     size_++;
   }
@@ -179,10 +179,10 @@ class ArrayList {
   std::size_t max_size() const { return max_size_; }
   /** returns the element at the given index
        */
-  T& at(std::size_t index) {
-    if (index >= size_) {
-      throw std::out_of_range("invalid index");
-    }
+  inline T& at(std::size_t index) {
+    //if (index >= size_) {
+    //  throw std::out_of_range("invalid index");
+    //}
     return contents[index];
   }
   /** returns the element at the given index
@@ -195,10 +195,10 @@ class ArrayList {
   }
   /** returns the element at the given index
        */
-  const T& at(std::size_t index) const {
-    if (index >= size_) {
-      throw std::out_of_range("invalid index");
-    }
+  inline const T& at(std::size_t index) const {
+    //if (index >= size_) {
+  //    throw std::out_of_range("invalid index");
+  //  }
     return contents[index];
   }
   /** returns the element at the given index

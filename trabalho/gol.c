@@ -126,8 +126,14 @@ void read_file (FILE * f, cell_t ** board, int size) {
     /* copy the string to the life board */
     for (i=0; i<size; i++)
     board[i+1][j+1] = s[i] == 'x';
-
   }
+  for (i=0; j<size+2; i++) {
+    board[0][j] = 0;
+    board[j][size+1] = 0;
+    board[size+1][j] = 0;
+    board[j][size+1] = 0;
+  }
+
 }
 
 void fill_board(cell_t ** board, int size, int percentage_alive) {
@@ -169,7 +175,7 @@ int size, steps;
     print(board,size);
   #endif
    printf ("You have %d processors.\n", get_nprocs());
-  int nthreads = atoi (argv[1]);
+  int nthreads = atoi(argv[1]);
   pthread_t* threads= malloc(nthreads*sizeof(pthread_t));
   sem_init(&p_sem1, 0, nthreads);
   sem_init(&p_sem2, 0, 0);
